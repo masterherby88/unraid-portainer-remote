@@ -29,7 +29,13 @@ Keep Portainer and the agent reachable only from trusted LANs/VPNs. The API key 
 
 ## Install / build
 
-This repository is currently a private development project. `build-package.sh` builds a Slackware-compatible `.txz` package from `src/`. A tagged GitHub release can attach that package; the `.plg` installer references the latest release asset. For private repositories, download or build the package while authenticated and install it from the Unraid webGUI; Unraid cannot fetch private GitHub assets anonymously.
+This repository is public so Unraid can fetch its plugin and release URLs without credentials. `build-package.sh` builds a Slackware-compatible `.txz` package from `src/`. Pushing a `v*` tag builds and attaches the package to a GitHub release. After the first release is published, install it in Unraid via **Plugins → Install Plugin** using:
+
+```text
+https://raw.githubusercontent.com/masterherby88/unraid-portainer-remote/main/portainer.remote.plg
+```
+
+The installer URL becomes usable once a release asset is available. To build locally, run:
 
 ```bash
 ./build-package.sh
