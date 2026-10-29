@@ -22,8 +22,9 @@ A small Unraid plugin that adds a Dashboard tile for one Docker container on a r
 
 1. In Portainer, create an API key for a user that can access only the Raspberry Pi environment if possible.
 2. Set the URL to the Portainer Server (for example `https://portainer.lan:9443`), click **Verbindung testen**, and choose the Environment ID from the list.
-3. Enter the exact container name, click **Speichern**, then open the Unraid Dashboard.
-4. A self-signed certificate should preferably be added to the host trust store. Only disable TLS verification for a trusted local connection where the certificate cannot be validated.
+3. In Unraid, open **Settings → User Utilities → Portainer Remote**, enter the exact container name, click **Speichern**, then open the Dashboard.
+4. If the widget is not visible, unlock the Dashboard and enable **Remote-Portainer-Containerstatus** in the tile manager.
+5. A self-signed certificate should preferably be added to the host trust store. Only disable TLS verification for a trusted local connection where the certificate cannot be validated.
 
 Keep Portainer and the agent reachable only from trusted LANs/VPNs. The API key grants the same access as its Portainer account; avoid an administrator key when a narrower account will do. HTTP sends the API key unencrypted and should not be used across untrusted networks.
 
