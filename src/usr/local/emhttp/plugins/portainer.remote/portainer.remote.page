@@ -2,7 +2,7 @@ Menu="Dashboard:0"
 Cond="version_compare(parse_ini_file('/etc/unraid-version')['version'],'6.11.9','>')"
 ---
 <?PHP
-require_once __DIR__ . '/lib.php';
+require_once '/usr/local/emhttp/plugins/portainer.remote/lib.php';
 $prCfg = pr_load_config();
 $prReady = !empty($prCfg['portainer_url']) && !empty($prCfg['api_key']) && !empty($prCfg['endpoint_id']) && !empty($prCfg['container_name']);
 $prRefresh = max(10, min(300, (int)$prCfg['refresh_seconds'])) * 1000;

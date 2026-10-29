@@ -4,7 +4,7 @@ Title="Portainer Remote"
 Icon="server"
 ---
 <?php
-require_once __DIR__ . '/lib.php';
+require_once '/usr/local/emhttp/plugins/portainer.remote/lib.php';
 $prCfg = pr_load_config();
 $prCsrf = isset($var['csrf_token']) ? (string)$var['csrf_token'] : '';
 ?>
