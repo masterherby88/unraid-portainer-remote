@@ -37,6 +37,14 @@ class PluginStaticTests(unittest.TestCase):
             if path.is_file():
                 self.assertNotIn('portainer.db', path.read_text(errors='replace').lower())
 
+    def test_plg_download_uses_url_element(self):
+        import xml.etree.ElementTree as ET
+        root = ET.parse(ROOT / 'portainer.remote.plg').getroot()
+        package = next((node for node in root.findall('.//FILE') if node.find('URL') is not None), None)
+        self.assertIsNotNone(package)
+        self.assertIn('releases/latest/download', package.find('URL').text)
+        self.assertIn('portainer.remote-0.1.1.txz', package.find('URL').text)
+
     def test_page_headers(self):
         dashboard = (PLUGIN / 'portainer.remote.page').read_text()
         settings_files = list(PLUGIN.glob('PortainerRemote.page'))
