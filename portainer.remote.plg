@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PLUGIN [<!ENTITY name "portainer.remote"><!ENTITY version "0.1.0"><!ENTITY package "portainer.remote-0.1.0.txz"><!ENTITY base "https://github.com/masterherby88/unraid-portainer-remote/releases/latest/download">]>
+<PLUGIN name="&name;" author="community" version="&version;" pluginURL="https://raw.githubusercontent.com/masterherby88/unraid-portainer-remote/main/portainer.remote.plg" support="https://github.com/masterherby88/unraid-portainer-remote/issues">
+  <CHANGES>
+    ## &version;
+    - Initial private development release: remote Portainer status, lifecycle controls and logs.
+  </CHANGES>
+  <FILE Name="/boot/config/plugins/&name;/&package;" Run="upgradepkg --install-new">
+    &base;/&package;
+  </FILE>
+  <FILE Run="/usr/local/emhttp/plugins/&name;" Method="remove">
+    rm -rf /usr/local/emhttp/plugins/&name;
+  </FILE>
+</PLUGIN>

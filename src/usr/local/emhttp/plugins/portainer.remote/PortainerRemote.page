@@ -1,0 +1,39 @@
+Menu="Settings"
+Title="Portainer Remote"
+Icon="server"
+---
+<?php
+require_once __DIR__ . '/lib.php';
+$prCfg = pr_load_config();
+$prCsrf = isset($var['csrf_token']) ? (string)$var['csrf_token'] : '';
+?>
+<div class="portainer-remote-settings">
+  <h2>Portainer Remote</h2>
+  <p>Verbindet Unraid mit deiner Portainer-Instanz, um genau einen Docker-Container auf dem Raspberry Pi anzuzeigen und zu steuern.</p>
+  <form id="pr-settings-form">
+    <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($prCsrf, ENT_QUOTES, 'UTF-8')?>">
+    <dl>
+      <dt>Portainer-URL</dt><dd><input class="narrow" type="url" name="portainer_url" required placeholder="https://portainer.lan:9443" value="<?=htmlspecialchars($prCfg['portainer_url'], ENT_QUOTES, 'UTF-8')?>"></dd>
+      <dt>API-Key</dt><dd><input class="narrow" type="password" name="api_key" autocomplete="new-password" placeholder="<?=$prCfg['api_key'] !== '' ? 'Gespeichert – leer lassen, um ihn beizubehalten' : 'Portainer → My account → Access tokens'?>"><br><small>Wird nur serverseitig gespeichert; nie im Dashboard-JavaScript ausgegeben.</small></dd>
+      <dt>Environment-ID</dt><dd><input class="narrow" type="number" min="1" step="1" name="endpoint_id" required value="<?=htmlspecialchars($prCfg['endpoint_id'], ENT_QUOTES, 'UTF-8')?>"><br><small>Nach „Verbindung testen“ wird die Environment-Liste unten angezeigt.</small></dd>
+      <dt>Containername</dt><dd><input class="narrow" type="text" name="container_name" required maxlength="128" value="<?=htmlspecialchars($prCfg['container_name'], ENT_QUOTES, 'UTF-8')?>"><br><small>Exakter Docker-Name, üblicherweise <code>iobroker</code>.</small></dd>
+      <dt>Aktualisierung</dt><dd><input type="number" name="refresh_seconds" min="10" max="300" step="5" value="<?=htmlspecialchars($prCfg['refresh_seconds'], ENT_QUOTES, 'UTF-8')?>"> Sekunden</dd>
+      <dt>TLS-Zertifikat prüfen</dt><dd><label><input type="checkbox" name="verify_tls" value="yes" <?=$prCfg['verify_tls'] !== 'no' ? 'checked' : ''?>> Zertifikat verifizieren (empfohlen)</label><br><small>Nur bei lokalem selbstsigniertem Portainer-Zertifikat deaktivieren.</small></dd>
+      <dt>API-Key entfernen</dt><dd><label><input type="checkbox" name="clear_api_key" value="yes"> Gespeicherten API-Key löschen</label></dd>
+    </dl>
+    <p class="pr-buttons"><button type="button" class="button" id="pr-test">Verbindung testen</button> <button type="submit" class="button">Speichern</button></p>
+  </form>
+  <div id="pr-message" role="status" aria-live="polite"></div>
+  <div id="pr-endpoints"></div>
+  <p><strong>Sicherheit:</strong> Erstelle in Portainer einen API-Key mit Zugriff nur auf die ioBroker-Umgebung. Der Schlüssel liegt in <code>/boot/config/plugins/portainer.remote/portainer.remote.cfg</code> mit Dateirechten 0600. Keine Portainer-Datenbank wird gelesen.</p>
+</div>
+<style>.portainer-remote-settings dl{display:grid;grid-template-columns:minmax(12rem,20rem) minmax(18rem,45rem);gap:.8rem 1rem}.portainer-remote-settings dt{font-weight:600}.portainer-remote-settings dd{margin:0}.portainer-remote-settings input.narrow{width:min(100%,34rem)}#pr-message{margin:.8rem 0}.pr-ok{color:#4cae4c}.pr-bad{color:#d9534f}.pr-buttons{margin-top:1rem}@media(max-width:700px){.portainer-remote-settings dl{grid-template-columns:1fr;gap:.2rem}.portainer-remote-settings dd{margin-bottom:.8rem}}</style>
+<script>
+(function(){
+  const form=document.getElementById('pr-settings-form'), message=document.getElementById('pr-message'), endpoints=document.getElementById('pr-endpoints');
+  function payload(action){const p=new URLSearchParams(new FormData(form));p.set('action',action);return p;}
+  async function send(action){const r=await fetch('/plugins/portainer.remote/api.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:payload(action),credentials:'same-origin',cache:'no-store'});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||('HTTP '+r.status));return d;}
+  document.getElementById('pr-test').addEventListener('click',async function(){message.className='';message.textContent='Teste Portainer …';endpoints.textContent='';try{const d=await send('test');message.className='pr-ok';message.textContent=d.message;const list=document.createElement('ul');d.endpoints.forEach(function(e){const li=document.createElement('li');li.textContent='ID '+e.id+' — '+e.name;li.style.cursor='pointer';li.title='Klicken, um die ID einzutragen';li.addEventListener('click',function(){form.elements.endpoint_id.value=e.id;});list.appendChild(li);});endpoints.appendChild(list);}catch(e){message.className='pr-bad';message.textContent=e.message;}});
+  form.addEventListener('submit',async function(ev){ev.preventDefault();message.className='';message.textContent='Speichere …';try{const d=await send('save');message.className='pr-ok';message.textContent=d.message;}catch(e){message.className='pr-bad';message.textContent=e.message;}});
+})();
+</script>

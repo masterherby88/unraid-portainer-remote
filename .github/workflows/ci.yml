@@ -1,0 +1,23 @@
+name: Validate plugin
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+      - name: Lint PHP sources
+        run: |
+          php -l src/usr/local/emhttp/plugins/portainer.remote/lib.php
+          php -l src/usr/local/emhttp/plugins/portainer.remote/api.php
+      - name: Build package
+        run: ./build-package.sh
+      - name: Static security checks
+        run: python3 tests/test_static.py

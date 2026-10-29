@@ -1,0 +1,88 @@
+Menu="Dashboard"
+Title="Portainer Remote"
+Icon="server"
+---
+<?php
+require_once __DIR__ . '/lib.php';
+$prCfg = pr_load_config();
+$prReady = !empty($prCfg['portainer_url']) && !empty($prCfg['api_key']) && !empty($prCfg['endpoint_id']) && !empty($prCfg['container_name']);
+$prRefresh = max(10, min(300, (int)$prCfg['refresh_seconds'])) * 1000;
+$prCsrf = isset($var['csrf_token']) ? (string)$var['csrf_token'] : '';
+?>
+<tbody title="Portainer Remote">
+<tr><td>
+<span class="tile-header">
+  <span class="tile-header-left">
+    <i class="fa fa-cubes f32"></i>
+    <div class="section">
+      <h3 class="tile-header-main">ioBroker · Raspberry Pi</h3>
+      <span id="pr-summary">Verbinde mit Portainer …</span>
+    </div>
+  </span>
+  <span class="tile-header-right">
+    <span class="tile-header-right-controls"><a href="/Settings/PortainerRemote" title="Einstellungen"><i class="fa fa-cog control"></i></a></span>
+  </span>
+</span>
+</td></tr>
+<tr><td>
+<?php if (!$prReady): ?>
+  <p>Portainer-Verbindung noch nicht eingerichtet. <a href="/Settings/PortainerRemote">Einstellungen öffnen</a>.</p>
+<?php else: ?>
+  <div id="pr-tile" data-ready="1">
+    <div class="pr-status-line"><strong id="pr-state">Lade Status …</strong><span id="pr-health"></span></div>
+    <div class="pr-meta" id="pr-meta"></div>
+    <div class="pr-actions">
+      <button type="button" class="button" data-pr-action="start">Start</button>
+      <button type="button" class="button" data-pr-action="stop">Stop</button>
+      <button type="button" class="button" data-pr-action="restart">Neustart</button>
+      <button type="button" class="button" id="pr-logs">Logs</button>
+      <button type="button" class="button" id="pr-refresh">Aktualisieren</button>
+    </div>
+    <pre id="pr-log-output" class="pr-log-output" hidden></pre>
+    <div id="pr-error" class="pr-error" role="status"></div>
+  </div>
+<?php endif; ?>
+</td></tr>
+</tbody>
+<?php if ($prReady): ?>
+<style>
+.pr-status-line{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .5rem}.pr-meta{opacity:.8;font-size:.9em;margin-bottom:.6rem}.pr-actions{display:flex;gap:.35rem;flex-wrap:wrap}.pr-actions .button{margin:0}.pr-error{color:#d9534f;margin-top:.4rem}.pr-log-output{max-height:18rem;overflow:auto;white-space:pre-wrap;word-break:break-word;margin-top:.6rem;padding:.5rem;border:1px solid var(--border,#888);background:rgba(0,0,0,.08);font-size:.8em}
+</style>
+<script>
+(function(){
+  const api='/plugins/portainer.remote/api.php';
+  const csrf=<?=json_encode($prCsrf, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)?>;
+  const interval=<?=json_encode($prRefresh)?>;
+  const state=document.getElementById('pr-state'), summary=document.getElementById('pr-summary');
+  const health=document.getElementById('pr-health'), meta=document.getElementById('pr-meta'), err=document.getElementById('pr-error');
+  const logs=document.getElementById('pr-log-output');
+  async function call(action,extra){
+    const body=new URLSearchParams(Object.assign({csrf_token:csrf,action:action},extra||{}));
+    const r=await fetch(api,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body,credentials:'same-origin',cache:'no-store'});
+    const data=await r.json(); if(!r.ok||!data.ok) throw new Error(data.error||('HTTP '+r.status)); return data;
+  }
+  async function refresh(){
+    try{
+      const d=await call('status'); err.textContent='';
+      if(!d.container){state.textContent='Nicht gefunden';summary.textContent='Portainer erreichbar';health.textContent='';meta.textContent='';return;}
+      const c=d.container; const running=c.state==='running';
+      state.textContent=running?'Läuft':'Gestoppt ('+c.state+')';
+      summary.textContent=running?'Container aktiv':'Container nicht aktiv';
+      health.textContent=c.health?' · Health: '+c.health:'';
+      meta.textContent=[c.status,c.image?'Image: '+c.image:''].filter(Boolean).join(' · ');
+    }catch(e){state.textContent='Nicht erreichbar';summary.textContent='Portainer-Verbindung fehlgeschlagen';err.textContent=e.message;}
+  }
+  document.querySelectorAll('[data-pr-action]').forEach(function(b){b.addEventListener('click',async function(){
+    const action=b.getAttribute('data-pr-action');
+    if((action==='stop'||action==='restart')&&!window.confirm('ioBroker auf dem Raspberry Pi wirklich '+(action==='stop'?'stoppen':'neu starten')+'?')) return;
+    if(action==='start'&&!window.confirm('ioBroker auf dem Raspberry Pi starten?')) return;
+    b.disabled=true;try{await call(action);await new Promise(r=>setTimeout(r,1000));await refresh();}catch(e){err.textContent=e.message;}finally{b.disabled=false;}
+  });});
+  document.getElementById('pr-refresh').addEventListener('click',refresh);
+  document.getElementById('pr-logs').addEventListener('click',async function(){
+    logs.hidden=false;logs.textContent='Lade Logs …';try{const d=await call('logs',{tail:'100'});logs.textContent=d.logs||'(keine Log-Ausgabe)';}catch(e){logs.textContent='Fehler: '+e.message;}
+  });
+  refresh();window.setInterval(refresh,interval);
+})();
+</script>
+<?php endif; ?>
