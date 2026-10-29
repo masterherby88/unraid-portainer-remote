@@ -1,4 +1,5 @@
 Menu="Settings"
+Type="php"
 Title="Portainer Remote"
 Icon="server"
 ---

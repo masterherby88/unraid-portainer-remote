@@ -43,14 +43,17 @@ class PluginStaticTests(unittest.TestCase):
         package = next((node for node in root.findall('.//FILE') if node.find('URL') is not None), None)
         self.assertIsNotNone(package)
         self.assertIn('releases/latest/download', package.find('URL').text)
-        self.assertIn('portainer.remote-0.1.1.txz', package.find('URL').text)
+        self.assertIn('portainer.remote-0.1.2.txz', package.find('URL').text)
 
     def test_page_headers(self):
         dashboard = (PLUGIN / 'portainer.remote.page').read_text()
         settings_files = list(PLUGIN.glob('PortainerRemote.page'))
-        self.assertIn('Menu="Dashboard"', dashboard)
+        self.assertIn('Menu="Dashboard:0"', dashboard)
+        self.assertIn("$mytiles['portainer.remote']['column1']", dashboard)
         self.assertTrue(settings_files)
-        self.assertIn('Menu="Settings"', settings_files[0].read_text())
+        settings_text = settings_files[0].read_text()
+        self.assertIn('Menu="Settings"', settings_text)
+        self.assertIn('Type="php"', settings_text)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

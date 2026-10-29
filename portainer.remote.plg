@@ -1,9 +1,9 @@
 <?xml version="1.0" standalone="yes"?>
-<!DOCTYPE PLUGIN [<!ENTITY name "portainer.remote"><!ENTITY version "0.1.1"><!ENTITY package "portainer.remote-0.1.1.txz"><!ENTITY base "https://github.com/masterherby88/unraid-portainer-remote/releases/latest/download">]>
+<!DOCTYPE PLUGIN [<!ENTITY name "portainer.remote"><!ENTITY version "0.1.2"><!ENTITY package "portainer.remote-0.1.2.txz"><!ENTITY base "https://github.com/masterherby88/unraid-portainer-remote/releases/latest/download">]>
 <PLUGIN name="&name;" author="community" version="&version;" pluginURL="https://raw.githubusercontent.com/masterherby88/unraid-portainer-remote/main/portainer.remote.plg" support="https://github.com/masterherby88/unraid-portainer-remote/issues">
   <CHANGES>
     ## &version;
-    - Fix package download URL handling for Unraid plugin installation.
+    - Register the Settings form as a PHP page and render the dashboard widget through Unraid's custom-tile API.
   </CHANGES>
   <FILE Run="/bin/bash">
     <INLINE>mkdir -p /boot/config/plugins/&name;</INLINE>
